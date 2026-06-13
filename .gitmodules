@@ -1,0 +1,3 @@
+[submodule "ui"]
+	path = ui
+	url = https://github.com/TUST-Open-Source-Club/knowledgebase-ui.git
