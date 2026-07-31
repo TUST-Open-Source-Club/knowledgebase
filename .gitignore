@@ -1,1 +1,15 @@
 /target
+
+# ===== 依赖与缓存 =====
+node_modules/
+.npm-cache/
+
+# ===== 本地工具索引 / 工作过程文件（不入库）=====
+# .codegraph 是代码图谱索引，.omo 是 OpenCode 本地计划/过程文件，均按机器生成，不入库
+.codegraph/
+.omo/
+
+# ===== 操作系统垃圾文件 =====
+Thumbs.db
+Desktop.ini
+.DS_Store
