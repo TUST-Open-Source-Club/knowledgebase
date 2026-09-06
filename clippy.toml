@@ -1,0 +1,5 @@
+# Clippy 配置
+#
+# 限制单文件行数，防止模块膨胀到难以维护的程度。
+# 参考：repository 模块重构前 user.rs 达到 1035 行，导航困难。
+too-many-lines-threshold = 400

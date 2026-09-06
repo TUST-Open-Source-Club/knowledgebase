@@ -4,3 +4,52 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# HTTP
+axum = "0.8.4"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "signal"] }
+tower-http = { version = "0.6.6", features = ["trace", "cors"] }
+
+# 鉴权（JWT HS256）
+# rust_crypto 选定纯 Rust 加密后端（HMAC/SHA2），否则运行期无法确定 CryptoProvider。
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+
+# 数据库
+# uuid/chrono/ipnetwork feature 让 sqlx 直接映射 UUID / TIMESTAMPTZ / INET 列。
+# migrate feature 让二进制内嵌迁移，也是 #[sqlx::test] 的前置条件。
+sqlx = { version = "0.8.6", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "json",
+    "ipnetwork",
+    "macros",
+    "migrate",
+] }
+
+# 主键：应用层生成 UUID v7（时间有序，利于 B-tree 局部性）
+uuid = { version = "1.18.1", features = ["v7", "serde"] }
+chrono = { version = "0.4.42", default-features = false, features = ["std", "serde", "clock"] }
+ipnetwork = "0.20.0"
+
+# 序列化
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+
+# 错误与日志
+thiserror = "2.0.17"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+
+# 配置
+dotenvy = "0.15.7"
+argon2 = "0.5.3"
+sha2 = "0.11.0"
+rand = "0.10.2"
+hex = "0.4.3"
+base64 = "0.23.1"
+
+[dev-dependencies]
+# API 集成测试用 oneshot 在内存中打完整请求（tests/api.rs）。
+tower = { version = "0.5.3", features = ["util"] }

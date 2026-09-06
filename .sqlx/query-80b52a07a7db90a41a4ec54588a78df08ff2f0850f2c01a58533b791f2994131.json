@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            dp_pub.permission AS \"public_perm: Option<Permission>\",\n            s.visibility      AS \"space_vis: Visibility\",\n            s.id              AS space_id,\n            s.owner_id        AS owner_id\n        FROM documents d\n        JOIN spaces s ON s.id = d.space_id\n        LEFT JOIN document_permissions dp_pub\n            ON dp_pub.document_id = d.id AND dp_pub.user_id = $2\n        WHERE d.id = $1\n          AND d.deleted_at IS NULL\n          AND s.deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "public_perm: Option<Permission>",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "space_vis: Visibility",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "space_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "80b52a07a7db90a41a4ec54588a78df08ff2f0850f2c01a58533b791f2994131"
+}

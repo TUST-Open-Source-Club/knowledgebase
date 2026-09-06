@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            (SELECT dp.permission FROM document_permissions dp\n             WHERE dp.document_id = d.id AND dp.user_id = $3 AND $4)\n                AS \"doc_perm: Permission\",\n            dp_pub.permission AS \"public_perm: Option<Permission>\",\n            NULL AS \"space_role: SpaceRole\",\n            s.visibility      AS \"space_vis: Visibility\",\n            NULL AS \"sys_role: UserRole\"\n        FROM documents d\n        JOIN spaces s ON s.id = d.space_id\n        LEFT JOIN document_permissions dp_pub\n            ON dp_pub.document_id = d.id AND dp_pub.user_id = $2\n        WHERE d.id = $1\n          AND d.deleted_at IS NULL\n          AND s.deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "doc_perm: Permission",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "public_perm: Option<Permission>",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "space_role: SpaceRole",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "space_vis: Visibility",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "sys_role: UserRole",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "aea35351e41407144b99194af41a76197f3532e89ab99a1aa7f074cb9ba9b527"
+}

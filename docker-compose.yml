@@ -1,0 +1,22 @@
+services:
+  postgres:
+    build: ./docker/postgres-zhparser
+    image: kb-postgres:16-zhparser
+    container_name: kb-postgres
+    environment:
+      POSTGRES_USER: kb
+      POSTGRES_PASSWORD: kb_dev_password
+      POSTGRES_DB: knowledgebase
+    # 映射到 5433，避开宿主机上可能已在运行的其他 PostgreSQL
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kb -d knowledgebase"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pgdata:

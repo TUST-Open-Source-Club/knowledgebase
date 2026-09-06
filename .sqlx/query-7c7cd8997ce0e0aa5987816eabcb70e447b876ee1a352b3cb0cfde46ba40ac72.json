@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE document_chunks AS c\n        SET position = target.pos\n        FROM (\n            SELECT id, ordinality - 1 AS pos\n            FROM unnest($2::uuid[]) WITH ORDINALITY AS t(id, ordinality)\n        ) AS target\n        WHERE c.id = target.id AND c.document_id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7c7cd8997ce0e0aa5987816eabcb70e447b876ee1a352b3cb0cfde46ba40ac72"
+}

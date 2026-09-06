@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            dp.permission     AS \"doc_perm: Option<Permission>\",\n            dp_pub.permission AS \"public_perm: Option<Permission>\",\n            sm.role           AS \"space_role: Option<SpaceRole>\",\n            s.visibility      AS \"space_vis: Visibility\",\n            u.role            AS \"sys_role: UserRole\"\n        FROM documents d\n        JOIN spaces s ON s.id = d.space_id\n        JOIN users  u ON u.id = $2\n        LEFT JOIN space_members sm\n            ON sm.space_id = d.space_id AND sm.user_id = $2\n        LEFT JOIN document_permissions dp\n            ON dp.document_id = d.id AND dp.user_id = $2\n        LEFT JOIN document_permissions dp_pub\n            ON dp_pub.document_id = d.id AND dp_pub.user_id = $3\n        WHERE d.id = $1\n          AND d.deleted_at IS NULL\n          AND s.deleted_at IS NULL\n          AND u.deleted_at IS NULL\n          AND u.status != 'banned'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "doc_perm: Option<Permission>",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "public_perm: Option<Permission>",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "space_role: Option<SpaceRole>",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "space_vis: Visibility",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "sys_role: UserRole",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "21948b17244bb0c17bdf0f5e63e00dc85a1c7ac91f9ff593164853a4e4d28209"
+}

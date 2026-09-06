@@ -1,1 +1,35 @@
 /target
+
+# ===== 依赖与缓存 =====
+node_modules/
+.npm-cache/
+
+# ===== 本地工具索引 / 工作过程文件（不入库）=====
+# .codegraph 是代码图谱索引，.omo 是 OpenCode 本地计划/过程文件，均按机器生成，不入库
+.codegraph/
+.omo/
+
+# ===== 本地环境配置（含数据库口令，绝不入库）=====
+.env
+.env.local
+
+# ===== 操作系统垃圾文件 =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== 个人工作文档与备份（不入库）=====
+/change/
+/issues/
+/docs/
+/issues_v1.2_changelog.md
+/ERpg.png
+/从零手搓操作指南.md
+/从零手搓操作指南（v2·API对接版）.md
+/前后端对接设计.md
+/前置知识学习清单.md
+/后端审查问题工单.md
+/后端审查问题验证报告.md
+/后端对接落地工作总结.md
+/数据库设计文档.md
+/知识库系统技术方案（对标语雀）.md

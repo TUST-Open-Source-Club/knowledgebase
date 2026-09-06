@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE document_chunks SET position = position - 1 WHERE document_id = $1 AND position > $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e2053431516a84ea95abf9f679825be8d53832c4e430e8ee4771f4b14b1050c7"
+}
