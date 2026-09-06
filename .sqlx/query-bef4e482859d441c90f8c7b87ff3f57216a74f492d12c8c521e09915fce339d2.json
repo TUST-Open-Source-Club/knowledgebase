@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH RECURSIVE tree AS (\n            SELECT id, 1 AS depth\n            FROM documents\n            WHERE id = $1\n\n            UNION ALL\n\n            SELECT d.id, t.depth + 1\n            FROM documents d\n            JOIN tree t ON d.parent_id = t.id\n            WHERE d.deleted_at IS NULL\n              AND t.depth < 10\n        )\n        UPDATE documents\n        SET deleted_at = now(), deleted_batch_id = $2\n        WHERE id IN (SELECT id FROM tree)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bef4e482859d441c90f8c7b87ff3f57216a74f492d12c8c521e09915fce339d2"
+}

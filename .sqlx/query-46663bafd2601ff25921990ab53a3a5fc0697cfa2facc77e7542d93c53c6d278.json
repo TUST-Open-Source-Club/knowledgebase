@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH RECURSIVE ancestors AS (\n            SELECT id, parent_id, deleted_at, 1 AS depth\n            FROM documents\n            WHERE id = $1\n\n            UNION ALL\n\n            SELECT d.id, d.parent_id, d.deleted_at, a.depth + 1\n            FROM documents d\n            JOIN ancestors a ON d.id = a.parent_id\n            WHERE a.depth < 10\n        )\n        SELECT EXISTS(SELECT 1 FROM ancestors WHERE deleted_at IS NOT NULL) AS \"exists!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "46663bafd2601ff25921990ab53a3a5fc0697cfa2facc77e7542d93c53c6d278"
+}

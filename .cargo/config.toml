@@ -1,0 +1,14 @@
+# 强制 sqlx 编译期宏走离线缓存（.sqlx/），构建不依赖活库。
+#
+# 效果：
+#   - `cargo build` / `cargo check` / CI 无需 DATABASE_URL。
+#   - 新增或修改了 query!/query_as!/query_scalar! 却没跑 `cargo sqlx prepare`，
+#     构建会明确报 "failed to find cached query"——而非静默用旧缓存或连库。
+#
+# 工作流：改了宏里的 SQL 后，跑一次（需要活库）：
+#   DATABASE_URL=postgres://kb:kb_dev_password@localhost:5433/knowledgebase cargo sqlx prepare
+# 然后把更新的 .sqlx/ 一起提交。
+#
+# 本地想直接连库校验（跳过缓存）时：SQLX_OFFLINE=false cargo check
+[env]
+SQLX_OFFLINE = "true"
