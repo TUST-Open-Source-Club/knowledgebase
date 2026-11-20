@@ -70,4 +70,14 @@ mod tests {
         // min = 0
         assert!(Snowflake::new(0).is_ok());
     }
+
+
+    #[test]
+    /// 测试拼装id,这段是问ai他建议的。检查序列号是否在最右侧
+    fn test_compose_id(){
+        let a = Snowflake::compose_id(EPOCH + 1, 0, 0);
+        let b = Snowflake::compose_id(EPOCH + 1, 0, 1);
+        assert_eq!(b - a, 1);
+    }
 }
+
