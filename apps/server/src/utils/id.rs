@@ -3,14 +3,51 @@ use std::time::{SystemTime,UNIX_EPOCH};
 use std::thread;
 
 
-/// 占10位的worker_id,1023
-const MAX_WORKER_ID: u16 =  (1 << 10) - 1;
+
+
+
+/// 2024-01-01 00:00:00 的毫秒时间戳
+const EPOCH: u64 = 1_704_067_200_000;
+
+const WORKER_ID_BITS: u64 = 10;
+/// 占10位的worker_id,1023，接口要u16
+const MAX_WORKER_ID: u16 =  (1 << WORKER_ID_BITS) - 1;
+
+const SEQUENCE_BITS: u64 = 12;
+/// 占12位的sequence,4095
+const MAX_SEQUENCE: u64 = (1 << SEQUENCE_BITS) - 1;  // 4095
+
+///左移量
+const TIMESTAMP_SHIFT: u64 = WORKER_ID_BITS + MAX_SEQUENCE; // 22
+const WORKER_ID_SHIFT: u64 = MAX_SEQUENCE; // 12
+
+
 
 pub struct Snowflake {
     worker_id: u16,
     }
 
 impl Snowflake {
+
+    /// 获取当前时间戳，单位：ms
+    fn current_timestamp_millis() -> u64 {
+        use std::time::{SystemTime,UNIX_EPOCH};
+        SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("系统时间早于 UNIX_EPOCH")
+        .as_millis() as u64
+    }
+
+
+    /// 拼装最终id
+
+
+
+
+
+
+
+
     pub fn Err_out_of_worker_id(worker_id: u16) -> Result<Self,String> {
         if worker_id > MAX_WORKER_ID {
             return Err("worker_id超限，最大允许1023".to_string());
