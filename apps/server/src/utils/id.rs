@@ -40,15 +40,16 @@ impl Snowflake {
 
 
     /// 拼装最终id
+    fn compose_id(current_timestamp: u64, worker_id: u16, sequence: u64) -> i64 {
+        let timestamp = (current_timestamp - EPOCH) << TIMESTAMP_SHIFT;
+        let worker_part = (worker_id as u64) << 
+        WORKER_ID_SHIFT;
+        let sequence_part = sequence & MAX_SEQUENCE;
+        (timestamp | worker_part | sequence_part) as i64
+        }
 
-
-
-
-
-
-
-
-    pub fn Err_out_of_worker_id(worker_id: u16) -> Result<Self,String> {
+    /// 判断worker_id是否超限，并构造生成器
+    pub fn new(worker_id: u16) -> Result<Self,String> {
         if worker_id > MAX_WORKER_ID {
             return Err("worker_id超限，最大允许1023".to_string());
         }
@@ -64,9 +65,9 @@ mod tests {
     /// 测试worker_id是否超限
     fn test_worker_id(){
         // max = 1023
-        assert!(Snowflake::Err_out_of_worker_id(1024).is_err());
-        assert!(Snowflake::Err_out_of_worker_id(1023).is_ok());
+        assert!(Snowflake::new(1024).is_err());
+        assert!(Snowflake::new(1023).is_ok());
         // min = 0
-        assert!(Snowflake::Err_out_of_worker_id(0).is_ok());
+        assert!(Snowflake::new(0).is_ok());
     }
 }
