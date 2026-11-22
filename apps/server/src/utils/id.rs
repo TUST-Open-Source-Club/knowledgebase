@@ -1,4 +1,4 @@
-use std::sync::atomic::AtomicU64;
+use std::sync::atomic::{AtomicU64,Ordering};
 use std::time::{SystemTime,UNIX_EPOCH,Duration};
 use std::thread;
 
@@ -28,15 +28,13 @@ const MAX_SLEEP_MILLIS: u64 = 5;
 
 pub struct Snowflake {
     worker_id: u16,
-    last_ts: u64,
-    sequence: u64,
+    state: AtomicU64,
     }
 
 impl Snowflake {
 
     /// 获取当前时间戳，单位：ms
     fn current_timestamp_millis() -> u64 {
-        use std::time::{SystemTime,UNIX_EPOCH};
         SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("系统时间早于 UNIX_EPOCH")
@@ -59,49 +57,56 @@ impl Snowflake {
             return Err("worker_id超限，最大允许1023".to_string());
         }
         Ok(Self { worker_id,
-                  last_ts: 0,
-                  sequence: 0 })
+                  state: AtomicU64::new(0) })
     }
 
     /// 生成下一个雪花ID
-    pub fn next_id(&mut self) -> Result<i64,String>{
+    pub fn next_id(&self) -> Result<i64,String>{
         loop {
             // 获取当前时间戳
             let now = Self::current_timestamp_millis();
+
+            let current_state = self.state.load(Ordering::Relaxed);
+            let last_ts = current_state >> SEQUENCE_BITS;
+            let last_seq = current_state & MAX_SEQUENCE;
             
             // 若时钟回拨，
             // 设置最大回拨时间为MAX_SLEEP_MILLIS=5，
             // 超过则返回错误
-            if now < self.last_ts {
-                let sleep_time = self.last_ts - now;
+            if now < last_ts {
+                let sleep_time = last_ts - now;
                 if sleep_time > MAX_SLEEP_MILLIS {
-                    return Err("时钟回拨超过{sleep_time}，超过允许的{MAX_SLEEP_MILLIS}".to_string());
+                    return Err(format!("时钟回拨超过{sleep_time}，超过允许的{MAX_SLEEP_MILLIS}"));
                 }
                 thread::sleep(Duration::from_millis(sleep_time));
                 continue;
             }
 
             // 若时间戳相同，判断序列号是否超限
-            if now == self.last_ts {
+            let sequence = if now == last_ts {
                 // 超限，等下一毫秒
-                if self.sequence >= MAX_SEQUENCE {
+                if last_seq >= MAX_SEQUENCE {
                     thread::sleep(Duration::from_millis(1));
 
                     continue;
                 }
                 // 未超限，增加序列号
-                self.sequence += 1;
+                last_seq + 1
             }
-
-            // 若时间戳进入新的毫秒，更新last_ts，归零sequence
             else {
-                self.sequence = 0;
-                self.last_ts = now;
-            }
+                // 若时间戳进入新的毫秒，归零sequence
+                0
+            };
 
-            return Ok(Self::compose_id(self.last_ts,
-                self.worker_id,
-                self.sequence))
+            let new_state = (now << SEQUENCE_BITS) | sequence;
+            if self.state.compare_exchange(
+                current_state, 
+                new_state, 
+                Ordering::SeqCst, 
+                Ordering::Relaxed)
+                .is_ok() {
+                return Ok(Self::compose_id(now, self.worker_id, sequence));
+            }
         }
     }
 }
@@ -128,5 +133,6 @@ mod tests {
         let b = Snowflake::compose_id(EPOCH + 1, 0, 1);
         assert_eq!(b - a, 1);
     }
+
 }
 
