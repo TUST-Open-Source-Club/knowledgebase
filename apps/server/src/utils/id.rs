@@ -150,5 +150,27 @@ mod tests {
         assert_eq!(set.len(), 10_000);
     }
 
+    #[test]
+    /// 同一毫秒内生成id递增
+    fn test_generate_id_no_repeat_multi_thread(){
+        let generator = Snowflake::new(2).expect("合法worker_id创建失败");
+        let mut prev_id = generator.next_id().expect("生成id失败");
+        let mut same_ms = 0;
+
+        for _ in 0..1_000 {
+            let id = generator.next_id().expect("生成id失败");
+            let shift = WORKER_ID_SHIFT + SEQUENCE_BITS;
+            let prev_ts = (prev_id as u64) >> shift;
+            let curr_ts = (id as u64) >> shift;
+            if prev_ts == curr_ts {
+                assert!(id > prev_id, "同一毫秒内应递增：prev_id={prev_id}, id={id}");
+                same_ms += 1;
+            }
+            prev_id = id;
+        }
+        assert!(same_ms > 0, "同一毫秒至少一对id");
+    
+    }
+
 }
 
