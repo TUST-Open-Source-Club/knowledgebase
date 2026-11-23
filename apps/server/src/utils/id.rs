@@ -18,8 +18,8 @@ const SEQUENCE_BITS: u64 = 12;
 const MAX_SEQUENCE: u64 = (1 << SEQUENCE_BITS) - 1;  // 4095
 
 ///左移量
-const TIMESTAMP_SHIFT: u64 = WORKER_ID_BITS + MAX_SEQUENCE; // 22
-const WORKER_ID_SHIFT: u64 = MAX_SEQUENCE; // 12
+const TIMESTAMP_SHIFT: u64 = WORKER_ID_BITS + SEQUENCE_BITS; // 22
+const WORKER_ID_SHIFT: u64 = SEQUENCE_BITS; // 12
 
 /// 最大睡眠时间，避免生成重复id
 const MAX_SLEEP_MILLIS: u64 = 5;
@@ -159,7 +159,7 @@ mod tests {
 
         for _ in 0..1_000 {
             let id = generator.next_id().expect("生成id失败");
-            let shift = WORKER_ID_SHIFT + SEQUENCE_BITS;
+            let shift = TIMESTAMP_SHIFT;
             let prev_ts = (prev_id as u64) >> shift;
             let curr_ts = (id as u64) >> shift;
             if prev_ts == curr_ts {
@@ -169,8 +169,46 @@ mod tests {
             prev_id = id;
         }
         assert!(same_ms > 0, "同一毫秒至少一对id");
-    
     }
 
+
+    #[test]
+    /// 多线程不并发
+    fn test_generate_id_no_concurrent(){
+        let generator = Arc::new(Snowflake::new(3).expect("合法worker_id创建失败"));
+
+        // 8个线程，每个线程生成1000个id
+        let test_gen_count = 8;
+        let per_count = 1_000;
+        // 建个列表放线程回执
+        let mut handles = Vec::with_capacity(test_gen_count);
+        for _ in 0..test_gen_count {
+            let generator = Arc::clone(&generator);
+            // spawn一个新线程，并把回执放进列表，8次
+            handles.push(thread::spawn(move || {
+                // 建个列表放id
+                let mut ids = Vec::with_capacity(per_count);
+                
+                // 生成1000个id
+                for _ in 0..per_count {
+                    ids.push(generator.next_id());
+                }
+
+                ids
+            }));
+        }
+        // 建个集合放所有id
+        let mut all_ids = HashSet::new();
+        for handle in handles {
+            // 等线程结束，把id放进集合
+            for id in handle.join().expect("线程join失败") {
+                assert!(all_ids.insert(id));
+                // 集合长度应该等于8000
+            }
+        }
+        assert_eq!(all_ids.len(), test_gen_count * per_count);
+    }
+
+    
 }
 
