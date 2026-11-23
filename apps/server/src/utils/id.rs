@@ -114,6 +114,9 @@ impl Snowflake {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
+    use std::thread;
+    use std::collections::HashSet;
 
     #[test]
     /// 测试worker_id是否超限
@@ -132,6 +135,19 @@ mod tests {
         let a = Snowflake::compose_id(EPOCH + 1, 0, 0);
         let b = Snowflake::compose_id(EPOCH + 1, 0, 1);
         assert_eq!(b - a, 1);
+    }
+
+
+    #[test]
+    /// 一万次生成无重复
+    fn test_generate_id_no_repeat(){
+        let generator = Snowflake::new(1).expect("合法worker_id创建失败");
+        // 用一万位hashset，检验重复id
+        let mut set = HashSet::with_capacity(10_000);
+        for _ in 0..10_000 {
+            assert!(set.insert(generator.next_id()));
+        }
+        assert_eq!(set.len(), 10_000);
     }
 
 }
