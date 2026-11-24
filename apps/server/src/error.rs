@@ -17,8 +17,8 @@ use thiserror::Error;
 
 /// 应用层统一错误类型。
 
-#[derive(Debug,Serialize)]
-pub struct FieldError{
+#[derive(Debug, Serialize)]
+pub struct FieldError {
     pub field: String,
     pub message: String,
 }
@@ -103,17 +103,17 @@ impl IntoResponse for AppError {
             tracing::debug!(status = status.as_u16(), code, "request rejected");
         }
 
-        let fields= match self{
+        let fields = match self {
             Self::Validation(fields) => Some(fields),
             _ => None,
-        }; 
+        };
 
         let body = Json(ErrorResponse {
-            error: ErrorBody { 
-                code, 
+            error: ErrorBody {
+                code,
                 message,
                 fields,
-             },
+            },
         });
 
         (status, body).into_response()
@@ -156,17 +156,15 @@ mod tests {
     #[test]
 
     fn validation_errors_should_return_400() {
-        let error = AppError::Validation(vec![
-            FieldError{
-                field: "email".to_owned(),
-                message:"邮箱输错了".to_owned(),
-            }
-        ]);
-        assert_eq!(error.to_string(),"请求参数校验失败")
+        let error = AppError::Validation(vec![FieldError {
+            field: "email".to_owned(),
+            message: "邮箱输错了".to_owned(),
+        }]);
+        assert_eq!(error.to_string(), "请求参数校验失败")
     }
 
     #[tokio::test]
-    async fn existing_errors_keep_response_shape(){
+    async fn existing_errors_keep_response_shape() {
         let cases = [
             (
                 AppError::BadRequest("参数不正确".to_owned()),
@@ -174,35 +172,30 @@ mod tests {
                 "bad_request",
                 "参数不正确",
             ),
-
             (
                 AppError::Unauthorized("请先登录".to_owned()),
                 StatusCode::UNAUTHORIZED,
                 "unauthorized",
                 "请先登录",
             ),
-
             (
                 AppError::Forbidden("没有权限".to_owned()),
                 StatusCode::FORBIDDEN,
                 "forbidden",
                 "没有权限",
             ),
-
             (
                 AppError::NotFound("文档不存在".to_owned()),
                 StatusCode::NOT_FOUND,
                 "not_found",
                 "文档不存在",
             ),
-
             (
                 AppError::Conflict("文档已存在".to_owned()),
                 StatusCode::CONFLICT,
                 "conflict",
                 "文档已存在",
             ),
-
             (
                 AppError::Internal(anyhow::anyhow!("服务器内部错误")),
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -211,18 +204,18 @@ mod tests {
             ),
         ];
 
-        for(error, expected_status, expected_code, expected_message) in cases {
-            assert_eq!(error.status(),expected_status);
-            assert_eq!(error.code(),expected_code);
+        for (error, expected_status, expected_code, expected_message) in cases {
+            assert_eq!(error.status(), expected_status);
+            assert_eq!(error.code(), expected_code);
             let response = error.into_response();
-            assert_eq!(response.status(),expected_status);
-            let bytes = axum::body::to_bytes(response.into_body(),1024 * 1024)
+            assert_eq!(response.status(), expected_status);
+            let bytes = axum::body::to_bytes(response.into_body(), 1024 * 1024)
                 .await
                 .expect("响应体应该可以读取");
 
             let actual: serde_json::Value =
                 serde_json::from_slice(&bytes).expect("响应体应该是合法的 JSON");
-            
+
             assert_eq!(
                 actual,
                 serde_json::json!({
@@ -234,34 +227,33 @@ mod tests {
                 "旧错误响应发生变化：{expected_code}"
             );
         }
-
     }
 
     #[tokio::test]
-    async fn validation_errors_include_fields(){
+    async fn validation_errors_include_fields() {
         let error = AppError::Validation(vec![
-            FieldError{
+            FieldError {
                 field: "email".to_owned(),
-                message:"邮箱输错了".to_owned(),
+                message: "邮箱输错了".to_owned(),
             },
-            FieldError{
-                field:"password".to_owned(),
-                message:"密码输错了".to_owned(),
-            }
+            FieldError {
+                field: "password".to_owned(),
+                message: "密码输错了".to_owned(),
+            },
         ]);
-        assert_eq!(error.status(),StatusCode::BAD_REQUEST);
-        assert_eq!(error.code(),"validation_failed");
+        assert_eq!(error.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(error.code(), "validation_failed");
 
         let response = error.into_response();
-        assert_eq!(response.status(),StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
-        let bytes = axum::body::to_bytes(response.into_body(),1024 * 1024)
+        let bytes = axum::body::to_bytes(response.into_body(), 1024 * 1024)
             .await
             .expect("响应体应该可以读取");
 
         let actual: serde_json::Value =
             serde_json::from_slice(&bytes).expect("响应体应该是合法的 JSON");
-        
+
         assert_eq!(
             actual,
             serde_json::json!({
@@ -282,5 +274,4 @@ mod tests {
             })
         );
     }
-
 }
