@@ -20,15 +20,15 @@ const WORKER_ID_SHIFT: u64 = SEQUENCE_BITS; // 12
 /// 最大睡眠时间，避免生成重复id
 const MAX_SLEEP_MILLIS: u64 = 5;
 
+/// 雪花ID生成器。
+///
+/// 位布局从高到底:
+/// 1位恒为0的符号  | 41位时间戳 | 10位worker_id | 12位sequence序列号
 pub struct Snowflake {
     worker_id: u16,
     state: AtomicU64,
 }
 
-/// 雪花ID生成器。
-/// 
-/// 位布局从高到底:
-/// 1位恒为0的符号  | 41位时间戳 | 10位worker_id | 12位sequence序列号
 impl Snowflake {
     // 获取当前时间戳，单位：ms
     fn current_timestamp_millis() -> u64 {
@@ -47,7 +47,7 @@ impl Snowflake {
     }
 
     /// 创建生成器
-    /// 
+    ///
     /// 若worker_id超限，则返回错误。
     pub fn new(worker_id: u16) -> Result<Self, String> {
         if worker_id > MAX_WORKER_ID {
@@ -60,7 +60,7 @@ impl Snowflake {
     }
 
     /// 生成下一个雪花ID。
-    /// 
+    ///
     /// 若时钟回拨，
     /// 则允许等待不超过最大回拨时间5ms，
     /// 超过则返回错误。
