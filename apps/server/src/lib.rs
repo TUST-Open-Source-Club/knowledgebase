@@ -11,6 +11,7 @@ pub mod error;
 pub mod routes;
 pub mod state;
 pub mod telemetry;
+pub mod utils;
 
 use anyhow::Context;
 
