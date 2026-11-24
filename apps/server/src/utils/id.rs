@@ -2,22 +2,22 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-/// 2024-01-01 00:00:00 的毫秒时间戳
+// 2024-01-01 00:00:00 的毫秒时间戳
 const EPOCH: u64 = 1_704_067_200_000;
 
 const WORKER_ID_BITS: u64 = 10;
-/// 占10位的worker_id,1023，接口要u16
+// 占10位的worker_id,1023，接口要u16
 const MAX_WORKER_ID: u16 = (1 << WORKER_ID_BITS) - 1;
 
 const SEQUENCE_BITS: u64 = 12;
-/// 占12位的sequence,4095
+// 占12位的sequence,4095
 const MAX_SEQUENCE: u64 = (1 << SEQUENCE_BITS) - 1; // 4095
 
-///左移量
+//左移量
 const TIMESTAMP_SHIFT: u64 = WORKER_ID_BITS + SEQUENCE_BITS; // 22
 const WORKER_ID_SHIFT: u64 = SEQUENCE_BITS; // 12
 
-/// 最大睡眠时间，避免生成重复id
+// 最大睡眠时间，避免生成重复id
 const MAX_SLEEP_MILLIS: u64 = 5;
 
 pub struct Snowflake {
@@ -26,7 +26,7 @@ pub struct Snowflake {
 }
 
 impl Snowflake {
-    /// 获取当前时间戳，单位：ms
+    // 获取当前时间戳，单位：ms
     fn current_timestamp_millis() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -53,7 +53,10 @@ impl Snowflake {
         })
     }
 
-    /// 生成下一个雪花ID
+    /// 生成下一个雪花ID。
+    /// 若时钟回拨，
+    /// 则等待最大回拨时间MAX_SLEEP_MILLIS=5ms，
+    /// 超过则返回错误。
     pub fn next_id(&self) -> Result<i64, String> {
         loop {
             // 获取当前时间戳
